@@ -3,6 +3,7 @@
 
 typedef struct no {
     int dest;
+    int peso;
     struct no *prox;
 }No;
 
@@ -30,24 +31,46 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
     if(orig >= g->Gmax)
         return 0;
     No *i;
-    No *ant;
+    No *j;
+    No *anti;
+    No *antj
     for(i=g->adj[orig]; i != NULL; i = i->prox) {
         if(i->dest == dest)
             return 0;
-        ant = i;
+        anti = i;
     }
 
-    No *vizinho = (No*)malloc(sizeof(No));
-    if(vizinho == NULL)
+    for(j=g->adj[dest]; j != NULL; j = j->prox) {
+        if(j->dest == orig)
+            return 0;
+        antj = i;
+    }
+
+    No *vizinhoOrig = (No*)malloc(sizeof(No));
+    No *vizinhoDest = (No*)malloc(sizeof(No));
+
+    if(vizinhoOrig == NULL || vizinhoDest)
         return 0;
-    vizinho->dest = dest;
-    vizinho->prox = NULL;
+    vizinhoOrig->dest = dest;
+    vizinhoOrig->peso = peso;
+    vizinhoOrig->prox = NULL;
+
+    vizinhoDest->dest = orig;
+    vizinhoDest->peso = peso;
+    vizinhoDest->prox = NULL;
     if(g->adj[orig] == NULL)
     {
-        g->adj[orig] = vizinho;
+        g->adj[orig] = vizinhoOrig;
     }
     else {
-        ant->prox = vizinho;
+        anti->prox = vizinhoOrig;
+    }
+    if(g->adj[dest] == NULL)
+    {
+        g->adj[dest] = vizinhoDest;
+    }
+    else{
+        antj->prox = vizinhoDest;
     }
 
     return 1;
@@ -73,6 +96,7 @@ int dfs(Grafo g, int orig, int dest) {
                 return 1;
             else{
                 if(visitados[i->dest] == 0) {
+                    printf("i->dest %d\n", i->dest);
                     visitados[i->dest] = 1;
                     pilha[topo++] = i->dest;
                 }
@@ -82,10 +106,47 @@ int dfs(Grafo g, int orig, int dest) {
     return 0;
 }
 
+int bfs(Grafo g, int orig, int dest) {
+    if(g == NULL)
+        return 0;
+    int fila[g->Gmax], inicio=0, fim=0, visitados[g->Gmax];
+    for(int i = 0; i < g->Gmax; i++)
+        visitados[i] = 0;
+    fila[fim++] = orig;
+    while(inicio != fim) {
+        int visitado = fila[inicio];
+        inicio = (inicio+1) % g->Gmax;
+        printf("Explorando lista do %d\n", visitado);
+        for(No *i = g->adj[visitado]; i != NULL; i = i->prox) {
+            printf("Explorando %d\n", i->dest);
+            if(i->dest == dest)
+                return 1;
+            else{
+                if(visitados[i->dest] == 0) {
+                    visitados[i->dest] = 1;
+                    fila[fim] = i->dest;
+                    fim = (fim+1) % g->Gmax;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int gulosa(Grafo g, int orig, int dest) {
+    if(g == NULL)
+        return 0;
+    
+}
+
 int main()
 {
     Grafo g = init(5);
-    printf("%d\n", inserirAdj(g, 0, 1, 0));
-    printf("%d\n", inserirAdj(g, 0, 3, 0));
-    printf("%d\n", g->adj[0]->prox->dest);
+    printf("%d\n", inserirAdj(g, 0, 1, 6));
+    printf("%d\n", inserirAdj(g, 0, 3, 4));
+    printf("%d\n", inserirAdj(g, 3, 4, 3));
+    printf("%d\n", inserirAdj(g, 4, 1, 7));
+    printf("%d\n", inserirAdj(g, 1, 2, 5));
+    //dfs(g, 0, 4);
+    bfs(g, 0, 5);
 }
