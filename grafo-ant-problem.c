@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 
 typedef struct no {
     int dest;
     int peso;
+    int distRelativa;
     struct no *prox;
 }No;
 
@@ -33,7 +35,7 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
     No *i;
     No *j;
     No *anti;
-    No *antj
+    No *antj;
     for(i=g->adj[orig]; i != NULL; i = i->prox) {
         if(i->dest == dest)
             return 0;
@@ -75,6 +77,16 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
 
     return 1;
 
+}
+
+void inserindoDistanciasRelativas(Grafo g, int dest) {
+    srand(time(NULL));
+    int vertices[g->Gmax];
+    for(int i=0; i<g->Gmax; i++) {
+        vertices[i] = rand()%100;
+        printf("%d\n", vertices[i]);
+    }
+    
 }
 
 int dfs(Grafo g, int orig, int dest) {
@@ -133,11 +145,11 @@ int bfs(Grafo g, int orig, int dest) {
     return 0;
 }
 
-int gulosa(Grafo g, int orig, int dest) {
+/*int gulosa(Grafo g, int orig, int dest) {
     if(g == NULL)
         return 0;
     
-}
+}*/
 
 int main()
 {
@@ -149,4 +161,5 @@ int main()
     printf("%d\n", inserirAdj(g, 1, 2, 5));
     //dfs(g, 0, 4);
     bfs(g, 0, 5);
+    inserindoDistanciasRelativas(g, 3);
 }
