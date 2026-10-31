@@ -176,6 +176,27 @@ int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
     return custo;
 }
 
+int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
+    if(g == NULL)
+        return 0;
+    if(orig == dest)
+        return 1;
+    int pilha[g->Gmax], topo=0, visitados[g->Gmax];
+    for(int i = 0; i < g->Gmax; i++) {
+        visitados[i] = 0;
+    }
+    visitados[orig] = 1;
+    pilha[topo++] = orig;
+    int custo = distanciasRel[orig], flag=0;
+    while(!flag) {
+        int visitado = pilha[--topo];
+        int menor = 100, indice = visitado;
+        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
+            
+        }
+    }
+}
+
 int main()
 {
     Grafo g = init(5);
