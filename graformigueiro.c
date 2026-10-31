@@ -32,26 +32,26 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
         return 0;
     if(orig >= g->Gmax)
         return 0;
-    No *i;
-    No *j;
+    No *i = g->adj[orig];
+    No *j = g->adj[dest];
     No *anti;
     No *antj;
-    for(i=g->adj[orig]; i != NULL; i = i->prox) {
+    for(;i != NULL; i = i->prox) {
         if(i->dest == dest)
             return 0;
         anti = i;
     }
 
-    for(j=g->adj[dest]; j != NULL; j = j->prox) {
+    for(; j != NULL; j = j->prox) {
         if(j->dest == orig)
             return 0;
-        antj = i;
+        antj = j;
     }
 
     No *vizinhoOrig = (No*)malloc(sizeof(No));
     No *vizinhoDest = (No*)malloc(sizeof(No));
 
-    if(vizinhoOrig == NULL || vizinhoDest)
+    if(vizinhoOrig == NULL || vizinhoDest == NULL)
         return 0;
     vizinhoOrig->dest = dest;
     vizinhoOrig->peso = peso;
@@ -67,6 +67,7 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
     else {
         anti->prox = vizinhoOrig;
     }
+    
     if(g->adj[dest] == NULL)
     {
         g->adj[dest] = vizinhoDest;
@@ -151,32 +152,26 @@ int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
     if(orig == dest)
         return 1;
     int pilha[g->Gmax], topo=0, visitados[g->Gmax];
-    for(int i=0; i<g->Gmax; i++) {
+    for(int i=0; i < g->Gmax; i++) {
         visitados[i] = 0;
     }
     visitados[orig] = 1;
     pilha[topo++] = orig;
-    int flag=0;
-    int custo = distanciasRel[orig], indiceEscolhido = orig;
+    int custo=distanciasRel[orig], flag=0;
     while(!flag) {
         int visitado = pilha[--topo];
-        int j=0, vec[g->Gmax];
-        for(No *i = g->adj[visitado]; i != NULL; i++) {
-            if(visitado == dest)
+        int menor = 100, indice = visitado;
+        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
+            if(menor > distanciasRel[j->dest]) {
+                menor = distanciasRel[j->dest];
+                indice = j->dest;
+            }
+            if(j->dest == dest) {
                 flag = 1;
-            vec[j++] = distanciasRel[i->dest];
-        }
-        int menor=vec[0], indice=0;
-        for(int k=1; k<j; k++) {
-            if(menor > vec[k])
-            {
-                menor = vec[k];
-                indice = k;
             }
         }
-        custo += menor;
-        visitados[indice] = 1;
         pilha[topo++] = indice;
+        custo += menor;
     }
     return custo;
 }
@@ -193,8 +188,8 @@ int main()
     printf("%d\n", inserirAdj(g, 1, 4, 5));
     printf("%d\n", inserirAdj(g, 3, 4, 5));
     //dfs(g, 0, 4);
-    bfs(g, 0, 5);
+    bfs(g, 0, 4);
     int distanciasRel[5];
     inserindoDistanciasRelativas(g, 4, distanciasRel);
-    printf("custo: %d\n", gulosa(g, 0, 4, distanciasRel));
+    printf("Custo: %d\n", gulosa(g, 0, 4, distanciasRel));
 }
