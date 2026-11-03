@@ -125,6 +125,7 @@ int dfs(Grafo g, int orig, int dest) {
 
 int bfs(Grafo g, int orig, int dest) {
     printf("=====BFS=====\n");
+    printf("Busca em largura do %d para o %d\n", orig, dest);
     if(g == NULL)
         return 0;
     int fila[g->Gmax], inicio=0, fim=0, visitados[g->Gmax];
@@ -137,8 +138,11 @@ int bfs(Grafo g, int orig, int dest) {
         printf("Explorando lista do %d\n", visitado);
         for(No *i = g->adj[visitado]; i != NULL; i = i->prox) {
             printf("Explorando %d\n", i->dest);
-            if(i->dest == dest)
+            if(i->dest == dest){
+                printf("Destino encontrado!\n");
+                printf("=============================\n");
                 return 1;
+            }
             else{
                 if(visitados[i->dest] == 0) {
                     visitados[i->dest] = 1;
@@ -259,15 +263,39 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
 int main()
 {
     Grafo g = init(5);
-    printf("%d\n", inserirAdj(g, 0, 1, 6));
-    printf("%d\n", inserirAdj(g, 0, 4, 8));
-    printf("%d\n", inserirAdj(g, 4, 3, 2));
-    printf("%d\n", inserirAdj(g, 1, 3, 3));
-    printf("%d\n", inserirAdj(g, 1, 2, 4));
-    printf("%d\n", inserirAdj(g, 2, 3, 3));
-    printf("%d\n", inserirAdj(g, 2, 4, 7));
-    printf("%d\n", inserirAdj(g, 1, 4, 5));
-    printf("%d\n", inserirAdj(g, 3, 4, 5));
+    inserirAdj(g, 0, 1, 6);
+    inserirAdj(g, 0, 4, 8);
+    inserirAdj(g, 4, 3, 2);
+    inserirAdj(g, 1, 3, 3);
+    inserirAdj(g, 1, 2, 4);
+    inserirAdj(g, 2, 3, 3);
+    inserirAdj(g, 2, 4, 7);
+    inserirAdj(g, 1, 4, 5);
+    //inserirAdj(g, 3, 4, 5);
+
+    /*printf("Formigueiros criados: \n");
+    printf("             0\n");
+    printf("            / \\ \n");
+    printf("           /   \\ \n");
+    printf("          /     \\ \n");
+    printf("         4-------1\n");
+    printf("         |\\    / |\n");
+    printf("         | \\  /  |\n");
+    printf("          \\  2  /\n");
+    printf("           \\   /\n");
+    printf("            \\ /\n");
+    printf("             3\n");*/
+    /*
+                   0
+                  / \
+                 /   \
+                /     \
+               4 ---- 1
+                \ / \
+                 3 - 2
+    */
+
+
     //dfs(g, 0, 4);
     bfs(g, 0, 4);
     int distanciasRel[5];
