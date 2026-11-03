@@ -260,6 +260,18 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
     return custo;
 }
 
+int gerarAdjacencias(Grafo g, int orig, int dest) {
+    if(g == NULL)
+        return 0;
+    if(orig == dest)
+        return 1;
+    if(orig >= g->Gmax || dest >= g->Gmax)
+        return 0;
+    for(int i=0; i<g->Gmax; i++) {
+        
+    }
+}
+
 int main()
 {
     Grafo g = init(5);
