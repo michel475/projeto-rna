@@ -125,12 +125,13 @@ int dfs(Grafo g, int orig, int dest) {
 
 int bfs(Grafo g, int orig, int dest) {
     printf("=====BFS=====\n");
-    printf("Busca em largura do %d para o %d\n", orig, dest);
+    printf("Busca em largura do formigueiro %d para o %d\n", orig, dest);
     if(g == NULL)
         return 0;
     int fila[g->Gmax], inicio=0, fim=0, visitados[g->Gmax];
     for(int i = 0; i < g->Gmax; i++)
         visitados[i] = 0;
+    visitados[orig] = 1; //adiciona a origem na lista de visitados
     fila[fim++] = orig;
     while(inicio != fim) {
         int visitado = fila[inicio];
@@ -146,11 +147,18 @@ int bfs(Grafo g, int orig, int dest) {
             else{
                 if(visitados[i->dest] == 0) {
                     visitados[i->dest] = 1;
+                    printf("Adicionando %d na fila\n", i->dest);
                     fila[fim] = i->dest;
                     fim = (fim+1) % g->Gmax;
                 }
             }
         }
+        printf("Fila de proximos formigueiros: "); //imprime a fila dos próximos formigueiros a serem buscados
+        for(int j=inicio;j<fim;j++)
+        	printf("%d ", fila[j]);
+        printf("\n\n");
+		system("pause");
+		system("cls");
     }
     return 0;
 }
@@ -301,7 +309,7 @@ void gerarArestas();
 int main()
 {
     Grafo g = init(15);
-    int origem = 1, destino = 4;
+    int origem = 0, destino = 8;
     gerarOrigDest(g, &origem, &destino);
     printf("Origem: %d\nDestino: %d\n", origem, destino);
     inserirAdj(g, 0, 1, 10);
