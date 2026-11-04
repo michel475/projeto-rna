@@ -226,41 +226,33 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
     }
     visitados[orig] = 1;
     pilha[topo++] = orig;
-    int custo = 0, flag=0;
+    int custo = 0, flag=0, custoAnt = 0;
     while(!flag) {
         int visitado = pilha[--topo];
-        int distanciasPonderadas[g->Gmax], indices[g->Gmax], k=0;
-        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
-            if(!visitados[j->dest]) {
-                indices[k] = j->dest;
-                distanciasPonderadas[k] = j->peso + distanciasRel[j->dest];
-                k++;
+        int pesoVis = g->adj[visitado]->peso;
+        int distRelVis = distanciasRel[visitado];
+        int menor = pesoVis+distRelVis, peso, index;
+        for(No *j = g->adj[visitado]->prox; j != NULL; j = j->prox) {
+            if(j->peso + distanciasRel[j->dest] < menor) {
+                menor = j->peso + distanciasRel[j->dest];
+                peso = j->peso;
+                index = j->dest;
             }
-            printf("Dist ponderada %d : %d\n", j->dest, j->peso + distanciasRel[j->dest]);
-        }
-        int menor = distanciasPonderadas[0], index = 0;
-        for(int i = 0; i<k; i++) {
-            if(indices[i] == dest) {
+            if(j->dest == dest) {
                 flag = 1;
-            } else{
-                if(menor > distanciasPonderadas[i] && !visitados[indices[i]]) {
-                    menor = distanciasPonderadas[i];
-                    index = i;
-                }
+                peso = j->peso;
             }
+            printf("Dist %d : %d\n", j->dest, j->peso+distanciasRel[j->dest]);
         }
-        if(!flag) {
-            printf("Escolhido: %d\n", indices[index]);
-            printf("Custo no escolhido: %d\n", menor);
-            pilha[topo++] = indices[index];
-            visitados[indices[index]] = 1;
-            custo += menor;
-        }
+        printf("Escolhido: %d\n", index);
+        custo += peso;
+        visitados[index] = 1;
+        pilha[topo++] = index;
     }
     return custo;
 }
 
-int gerarAdjacencias(Grafo g, int orig, int dest) {
+/*int gerarAdjacencias(Grafo g, int orig, int dest) {
     if(g == NULL)
         return 0;
     if(orig == dest)
@@ -270,11 +262,20 @@ int gerarAdjacencias(Grafo g, int orig, int dest) {
     for(int i=0; i<g->Gmax; i++) {
         
     }
+}*/
+
+void gerarOrigDest(Grafo g, int *orig, int *dest) {
+    srand(time(NULL));
+    *orig = rand()%g->Gmax;
+    *dest = rand()%g->Gmax;
 }
 
 int main()
 {
     Grafo g = init(5);
+    int origem, destino;
+    gerarOrigDest(g, &origem, &destino);
+    printf("Origem: %d\nDestino: %d\n", origem, destino);
     inserirAdj(g, 0, 1, 6);
     inserirAdj(g, 0, 4, 8);
     inserirAdj(g, 4, 3, 2);
@@ -309,9 +310,9 @@ int main()
 
 
     //dfs(g, 0, 4);
-    bfs(g, 0, 4);
+    bfs(g, origem, destino);
     int distanciasRel[5];
-    inserindoDistanciasRelativas(g, 3, distanciasRel);
-    printf("Custo guloso: %d\n", gulosa(g, 0, 3, distanciasRel));
-    printf("Custo heuristica: %d\n", heuristica(g, 0, 3, distanciasRel));
+    inserindoDistanciasRelativas(g, destino, distanciasRel);
+    printf("Custo guloso: %d\n", gulosa(g, origem, destino, distanciasRel));
+    printf("Custo heuristica: %d\n", heuristica(g, origem, destino, distanciasRel));
 }
