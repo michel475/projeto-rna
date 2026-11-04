@@ -167,7 +167,7 @@ int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
     }
     visitados[orig] = 1;
     pilha[topo++] = orig;
-    int custo=0, flag=0;
+    int custo=distanciasRel[orig], flag=0;
     while(!flag) {
         int visitado = pilha[--topo];
         int distancias[g->Gmax], indices[g->Gmax], k=0;
@@ -226,28 +226,34 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
     }
     visitados[orig] = 1;
     pilha[topo++] = orig;
-    int custo = 0, flag=0, custoAnt = 0;
+    int custo = 0, flag=0;
     while(!flag) {
         int visitado = pilha[--topo];
-        int pesoVis = g->adj[visitado]->peso;
-        int distRelVis = distanciasRel[visitado];
-        int menor = pesoVis+distRelVis, peso, index;
-        for(No *j = g->adj[visitado]->prox; j != NULL; j = j->prox) {
-            if(j->peso + distanciasRel[j->dest] < menor) {
-                menor = j->peso + distanciasRel[j->dest];
-                peso = j->peso;
-                index = j->dest;
+        int distanciasPonderadas[g->Gmax], indices[g->Gmax], k=0, pesos[g->Gmax];
+        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
+            if(!visitados[j->dest]) {
+                distanciasPonderadas[k] = distanciasRel[j->dest] + j->peso;
+                indices[k] = j->dest;
+                pesos[k] = j->peso;
+                k++;
             }
-            if(j->dest == dest) {
-                flag = 1;
-                peso = j->peso;
-            }
-            printf("Dist %d : %d\n", j->dest, j->peso+distanciasRel[j->dest]);
         }
-        printf("Escolhido: %d\n", index);
-        custo += peso;
+        int menor = distanciasPonderadas[0], index, peso;
+        for(int i=0; i<k; i++) {
+            if(indices[i] == dest) {
+                flag = 1;
+                peso = pesos[indices[i]];
+            } else{
+                if(menor > distanciasPonderadas[i]) {
+                    menor = distanciasPonderadas[i];
+                    peso = pesos[i];
+                    index = i;
+                }
+            }
+        }
         visitados[index] = 1;
         pilha[topo++] = index;
+        custo += peso;
     }
     return custo;
 }
@@ -273,8 +279,8 @@ void gerarOrigDest(Grafo g, int *orig, int *dest) {
 int main()
 {
     Grafo g = init(5);
-    int origem, destino;
-    gerarOrigDest(g, &origem, &destino);
+    int origem = 0, destino = 2;
+    //gerarOrigDest(g, &origem, &destino);
     printf("Origem: %d\nDestino: %d\n", origem, destino);
     inserirAdj(g, 0, 1, 6);
     inserirAdj(g, 0, 4, 8);
