@@ -229,6 +229,7 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
     int custo = 0, flag=0;
     while(!flag) {
         int visitado = pilha[--topo];
+        printf("Visitando lista de adjacencias do : %d\n", visitado);
         int distanciasPonderadas[g->Gmax], indices[g->Gmax], k=0, pesos[g->Gmax];
         for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
             if(!visitados[j->dest]) {
@@ -236,21 +237,26 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
                 indices[k] = j->dest;
                 pesos[k] = j->peso;
                 k++;
+                printf("%d adicionado ao vetor distanciasPonderadas\n", j->dest);
+                printf("Peso: %d\n", j->peso);
             }
         }
-        int menor = distanciasPonderadas[0], index, peso;
-        for(int i=0; i<k; i++) {
+        int menor = distanciasPonderadas[0], index=indices[0], peso=pesos[0];
+        printf("Buscando o menor....\n");
+        for(int i=1; i<k && !flag; i++) {
             if(indices[i] == dest) {
                 flag = 1;
-                peso = pesos[indices[i]];
+                peso = pesos[i];
             } else{
                 if(menor > distanciasPonderadas[i]) {
                     menor = distanciasPonderadas[i];
                     peso = pesos[i];
-                    index = i;
+                    index = indices[i];
                 }
             }
         }
+        printf("Menor encontrado: %d\n", menor);
+        printf("Peso a ser adicionado ao custo: %d\n", peso);
         visitados[index] = 1;
         pilha[topo++] = index;
         custo += peso;
