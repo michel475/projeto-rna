@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-#include <limits.h>
 #define MAX 999999999
 
 typedef struct no {
@@ -221,7 +220,7 @@ int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
 
     while (1) {
         int atual = -1;
-        int menorHeuristica = INT_MAX;
+        int menorHeuristica = MAX;
 
         // Seleciona o vértice aberto com a menor heurística.
         for (int i = 0; i < g->Gmax; i++) {
@@ -247,7 +246,7 @@ int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
             printf("Destino encontrado!\n");
             imprimeCaminho(pai, orig, dest, g->Gmax);
 
-            if (custoReal[dest] > INT_MAX)
+            if (custoReal[dest] > MAX)
                 return -1;
 
             return (int)custoReal[dest];
@@ -351,7 +350,7 @@ int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
             printf("Destino encontrado!\n");
             imprimeCaminho(pai, orig, dest, g->Gmax);
 
-            if (gScore[dest] > INT_MAX)
+            if (gScore[dest] > MAX)
                 return -1;
 
             return (int)gScore[dest];
