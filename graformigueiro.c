@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <limits.h>
+#define MAX 999999999
 
 typedef struct no {
     int dest;
@@ -30,7 +32,7 @@ Grafo init(int v) {
 int inserirAdj(Grafo g, int orig, int dest, int peso) {
     if(g == NULL)
         return 0;
-    if(orig >= g->Gmax)
+    if(orig >= g->Gmax || orig < 0 || dest >= g->Gmax || dest < 0)
         return 0;
     No *i = g->adj[orig];
     No *j = g->adj[dest];
@@ -80,22 +82,12 @@ int inserirAdj(Grafo g, int orig, int dest, int peso) {
 
 }
 
-void inserindoDistanciasRelativas(Grafo g, int dest, int distanciasRelativas[]) {
-    srand(time(NULL));
-    for(int i=0; i<g->Gmax; i++) {
-        distanciasRelativas[i] = rand()%100;
-        if(distanciasRelativas[i] == 0 && i != dest) {
-            distanciasRelativas[i]++;
-        }
-        printf("Distancia Relativa de %d para %d: %d\n", i, dest, distanciasRelativas[i]);
-    }
-    distanciasRelativas[dest] = 0;
-}
-
 int dfs(Grafo g, int orig, int dest) {
     printf("=====DFS=====\n");
     printf("Busca em profundidade do formigueiro %d para o %d\n", orig, dest);
     if(g == NULL)
+        return 0;
+    if(orig >= g->Gmax || orig < 0 || dest >= g->Gmax || dest < 0)
         return 0;
     int pilha[g->Gmax], topo=0, visitados[g->Gmax];
     for(int i=0; i < g->Gmax; i++) {
@@ -137,6 +129,8 @@ int bfs(Grafo g, int orig, int dest) {
     printf("Busca em largura do formigueiro %d para o %d\n", orig, dest);
     if(g == NULL)
         return 0;
+    if(orig >= g->Gmax || orig < 0 || dest >= g->Gmax || dest < 0)
+        return 0;
     int fila[g->Gmax], inicio=0, fim=0, visitados[g->Gmax];
     for(int i = 0; i < g->Gmax; i++)
         visitados[i] = 0;
@@ -172,58 +166,123 @@ int bfs(Grafo g, int orig, int dest) {
     return 0;
 }
 
-int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
-    printf("=====GULOSA=====\n");
-    printf("Busca gulosa do formigueiro %d para o %d\n", orig, dest);
-    if(g == NULL)
-        return 0;
-    if(orig == dest)
-        return 0;
-    int pilha[g->Gmax], topo=0, visitados[g->Gmax];
-    for(int i=0; i < g->Gmax; i++) {
-        visitados[i] = 0;
+
+void imprimeCaminho(int pai[], int orig, int dest, int tamanho) {
+    int caminho[tamanho];
+    int qtd = 0;
+    int atual = dest;
+    while (atual != -1 && qtd < tamanho) {
+        caminho[qtd++] = atual;
+        if (atual == orig)
+            break;
+        atual = pai[atual];
     }
-    visitados[orig] = 1;
-    pilha[topo++] = orig;
-    int custo=distanciasRel[orig], flag=0;
-    while(!flag) {
-        int visitado = pilha[--topo];
-        int distancias[g->Gmax], indices[g->Gmax], k=0;
-        printf("Explorando lista do %d\n", visitado);
-        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
-            printf("Explorando %d\n", j->dest);
-            if(!visitados[j->dest]) {
-                indices[k] = j->dest;
-                distancias[k] = distanciasRel[j->dest];
-                k++;
-            }
-        }
-        int menor = distancias[0], index = indices[0];
-        if(index == dest) {
-            flag = 1;
-            printf("Destino encontrado!\n");
-            printf("=============================\n");
-        } else{
-            for(int i=1; i<k; i++) {
-                if(indices[i] == dest) {
-                    flag = 1;
-                    printf("Destino encontrado!\n");
-                    printf("=============================\n");
-                } else{
-                    if(menor > distancias[i] && !visitados[indices[i]]) {
-                        menor = distancias[i];
-                        index = indices[i];
-                    }
+    if (qtd == 0 || caminho[qtd - 1] != orig) {
+        printf("Caminho nao encontrado.\n");
+        return;
+    }
+    printf("Caminho encontrado: ");
+    for (int i = qtd - 1; i >= 0; i--) {
+        printf("%d", caminho[i]);
+        if (i > 0)
+            printf(" -> ");
+    }
+    printf("\n");
+}
+
+
+int gulosa(Grafo g, int orig, int dest, int distanciasRel[]) {
+    printf("===== BUSCA GULOSA =====\n");
+    printf("Busca gulosa do formigueiro %d para o %d\n", orig, dest);
+
+    if (g == NULL || distanciasRel == NULL)
+        return -1;
+
+    if (orig < 0 || dest < 0 || orig >= g->Gmax || dest >= g->Gmax)
+        return -1;
+
+    if (orig == dest)
+        return 0;
+
+    int aberto[g->Gmax];
+    int fechados[g->Gmax];
+    int pai[g->Gmax];
+    long long custoReal[g->Gmax];
+
+    for (int i = 0; i < g->Gmax; i++) {
+        aberto[i] = 0;
+        fechados[i] = 0;
+        pai[i] = -1;
+        custoReal[i] = MAX;
+    }
+
+    aberto[orig] = 1;
+    custoReal[orig] = 0;
+
+    while (1) {
+        int atual = -1;
+        int menorHeuristica = INT_MAX;
+
+        // Seleciona o vértice aberto com a menor heurística.
+        for (int i = 0; i < g->Gmax; i++) {
+            if (aberto[i] && !fechados[i]) {
+                if (distanciasRel[i] < menorHeuristica) {
+                    menorHeuristica = distanciasRel[i];
+                    atual = i;
                 }
             }
         }
-        printf("Menor encontrado: %d\n", menor);
-        printf("Adicionando %d na pilha\n", index);
-        visitados[index] = 1;
-        pilha[topo++] = index;
-        custo += menor;
+
+        // Não existem mais vértices para explorar.
+        if (atual == -1) {
+            printf("Destino nao encontrado.\n");
+            return -1;
+        }
+
+        printf("Explorando vertice %d (h = %d)\n",
+               atual, distanciasRel[atual]);
+
+        // O destino é encontrado quando é selecionado da fronteira.
+        if (atual == dest) {
+            printf("Destino encontrado!\n");
+            imprimeCaminho(pai, orig, dest, g->Gmax);
+
+            if (custoReal[dest] > INT_MAX)
+                return -1;
+
+            return (int)custoReal[dest];
+        }
+
+        aberto[atual] = 0;
+        fechados[atual] = 1;
+
+        // Adiciona os vizinhos à fronteira.
+        for (No *j = g->adj[atual]; j != NULL; j = j->prox) {
+            int vizinho = j->dest;
+
+            if (vizinho < 0 || vizinho >= g->Gmax)
+                continue;
+
+            if (fechados[vizinho])
+                continue;
+
+            if (j->peso < 0)
+                return -1;
+
+            long long novoCusto = custoReal[atual] + j->peso;
+
+            if (novoCusto < custoReal[vizinho]) {
+                custoReal[vizinho] = novoCusto;
+                pai[vizinho] = atual;
+                aberto[vizinho] = 1;
+
+                printf("Adicionando %d na fronteira (h = %d)\n",
+                       vizinho, distanciasRel[vizinho]);
+            }
+        }
+
+        printf("\n");
     }
-    return custo;
 }
 
 void imprimePesos(Grafo g) {
@@ -240,76 +299,116 @@ void imprimePesos(Grafo g) {
 }
 
 int heuristica(Grafo g, int orig, int dest, int distanciasRel[]) {
-    printf("=====HEURISTICA=====\n");
-    printf("Busca heurística do formigueiro %d para o %d\n", orig, dest);
-    if(g == NULL)
+    printf("===== BUSCA A* =====\n");
+    printf("Busca heuristica do formigueiro %d para o %d\n", orig, dest);
+    if (g == NULL || distanciasRel == NULL)
+        return -1;
+    if (orig < 0 || dest < 0 || orig >= g->Gmax || dest >= g->Gmax)
+        return -1;
+    if (orig == dest)
         return 0;
-    if(orig == dest)
-        return 0;
-    int pilha[g->Gmax], topo=0, visitados[g->Gmax];
-    for(int i = 0; i < g->Gmax; i++) {
-        visitados[i] = 0;
+    int aberto[g->Gmax];
+    int fechados[g->Gmax];
+    int pai[g->Gmax];
+    long long gScore[g->Gmax];
+    for (int i = 0; i < g->Gmax; i++) {
+        aberto[i] = 0;
+        fechados[i] = 0;
+        pai[i] = -1;
+        gScore[i] = MAX;
     }
-    visitados[orig] = 1;
-    pilha[topo++] = orig;
-    int custo = 0, flag=0;
-    while(!flag) {
-        int visitado = pilha[--topo];
-        printf("Explorando lista do %d\n", visitado);
-        int distanciasPonderadas[g->Gmax], indices[g->Gmax], k=0, pesos[g->Gmax];
-        for(No *j = g->adj[visitado]; j != NULL; j = j->prox) {
-            printf("Explorando %d\n", j->dest);
-            if(!visitados[j->dest]) {
-                distanciasPonderadas[k] = distanciasRel[j->dest] + j->peso;
-                indices[k] = j->dest;
-                pesos[k] = j->peso;
-                k++;
-            }
-        }
-        
-        int menor = distanciasPonderadas[0], index=indices[0], peso=pesos[0];
-        if(index == dest) {
-            flag = 1;
-        } else{
-            printf("Buscando o menor....\n");
-            for(int i=1; i<k && !flag; i++) {
-                if(indices[i] == dest) {
-                    flag = 1;
-                    peso = pesos[i];
-                    printf("Destino encontrado!\n");
-                    printf("=============================\n");
-                } else{
-                    if(menor > distanciasPonderadas[i]) {
-                        menor = distanciasPonderadas[i];
-                        peso = pesos[i];
-                        index = indices[i];
-                    }
+    // Custo real da origem até ela mesma.
+    gScore[orig] = 0;
+    aberto[orig] = 1;
+    while (1) {
+        int atual = -1;
+        long long menorF = MAX;
+        // Escolhe o vértice com menor custo
+        for (int i = 0; i < g->Gmax; i++) {
+            if (aberto[i] && !fechados[i]) {
+                long long f = gScore[i] + distanciasRel[i];
+                if (f < menorF) {
+                    menorF = f;
+                    atual = i;
                 }
             }
         }
-        printf("Menor encontrado: %d\n", menor);
-        printf("Peso a ser adicionado ao custo: %d\n", peso);
-        printf("Adicionando %d na pilha\n", index);
-        visitados[index] = 1;
-        pilha[topo++] = index;
-        custo += peso;
+
+        // Não existem mais vértices para explorar.
+        if (atual == -1) {
+            printf("Destino nao encontrado.\n");
+            return -1;
+        }
+
+        printf("Explorando vertice %d\n", atual);
+        printf("g(n) = %lld | h(n) = %d | f(n) = %lld\n",
+               gScore[atual],
+               distanciasRel[atual],
+               menorF);
+
+        // O destino é encontrado quando é selecionado da fronteira.
+        if (atual == dest) {
+            printf("Destino encontrado!\n");
+            imprimeCaminho(pai, orig, dest, g->Gmax);
+
+            if (gScore[dest] > INT_MAX)
+                return -1;
+
+            return (int)gScore[dest];
+        }
+
+        aberto[atual] = 0;
+        fechados[atual] = 1;
+
+        // Avalia os vizinhos do vértice atual.
+        for (No *j = g->adj[atual]; j != NULL; j = j->prox) {
+            int vizinho = j->dest;
+
+            if (vizinho < 0 || vizinho >= g->Gmax)
+                continue;
+
+            if (j->peso < 0)
+                return -1;
+
+            // g(novo) = g(atual) + custo da aresta.
+            long long novoG = gScore[atual] + j->peso;
+
+            // Atualiza somente quando encontra um caminho melhor.
+            if (novoG < gScore[vizinho]) {
+                gScore[vizinho] = novoG;
+                pai[vizinho] = atual;
+
+                // Reabre o vértice se um caminho melhor for encontrado.
+                fechados[vizinho] = 0;
+                aberto[vizinho] = 1;
+
+                long long novoF = novoG + distanciasRel[vizinho];
+
+                printf("Atualizando vertice %d:\n", vizinho);
+                printf("g(n) = %lld | h(n) = %d | f(n) = %lld\n",
+                       novoG,
+                       distanciasRel[vizinho],
+                       novoF);
+            }
+        }
+
+        printf("\n");
     }
-    return custo;
 }
 
 void gerarOrigDest(Grafo g, int *orig, int *dest) {
     srand(time(NULL));
-    *orig = rand()%g->Gmax;
-    *dest = rand()%g->Gmax;
+    do{
+        *orig = rand()%g->Gmax;
+        *dest = rand()%g->Gmax;
+    }while(*orig == *dest);
 }
-
-void gerarArestas();
 
 int main()
 {
     Grafo g = init(15);
-    int origem = 0, destino = 7;
-    //gerarOrigDest(g, &origem, &destino);
+    int origem, destino;
+    gerarOrigDest(g, &origem, &destino);
     printf("Origem: %d\nDestino: %d\n", origem, destino);
     inserirAdj(g, 0, 1, 10);
     inserirAdj(g, 0, 2, 12);
@@ -336,11 +435,9 @@ int main()
     inserirAdj(g, 12, 14, 39);
     inserirAdj(g, 13, 14, 41);
 
-
-    //dfs(g, 0, 4);
     bfs(g, origem, destino);
-    int distanciasRel[15] = {41, 51, 29, 16, 40, 56, 54, 0, 22, 34, 62, 93, 64, 49, 81};
-    inserindoDistanciasRelativas(g, destino, distanciasRel);
+    int distanciasRel[15] = {41, 51, 29, 16, 40, 56, 54, 33, 22, 34, 62, 93, 64, 49, 81};
+    distanciasRel[destino] = 0;
     printf("Custo guloso: %d\n", gulosa(g, origem, destino, distanciasRel));
     printf("Custo heuristica: %d\n", heuristica(g, origem, destino, distanciasRel));
 }
